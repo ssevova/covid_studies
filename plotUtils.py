@@ -76,14 +76,13 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     print('saved {}'.format(pltname))
     plt.clf()
 #-----------------------------------------------------
-def make1Dplot(arr1,xarr,xname,xmin,xmax,ylabel,isLog): 
+def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog): 
     """Plot a histogram with error bars."""
     print(np.array(arr1))
-    print(np.array(xarr))
 
     fig, ax1 = plt.subplots(1,1)    
 
-    ax1.bar(np.array(xarr),
+    ax1.bar(range(xmin,xmax),
             np.array(arr1),
             color='g',
             width=1,

@@ -68,20 +68,19 @@ def main():
     labelDay="Cases / day"
     labelMil="Cases per million / day"
     isLog=False
-    '''
+
     make1Dplot(df_swiss_official['new.infections'],"daily_infections",0,len(df_swiss_official.index),labelDay,isLog)
     make1Dplot(df_can['new_cases']  ,"canada_daily_infections",0,len(df_can.index),labelDay,isLog)
     make1Dplot(df_swiss['new_cases'],"swiss_daily_infections",0,len(df_swiss.index),labelDay,isLog)
     make1Dplot(df_bgr['new_cases']  ,"bgr_daily_infections",0,len(df_bgr.index),labelDay,isLog)
     make1Dplot(df_usa['new_cases']  ,"usa_daily_infections",0,len(df_usa.index),labelDay,isLog)
-    '''
+
     
-    make1Dplot(df_can['new_cases_per_million'],df_can['date'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
-    '''
+    make1Dplot(df_can['new_cases_per_million'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
     make1Dplot(df_swiss['new_cases_per_million'],"swiss_daily_cases_per_mil",0,len(df_swiss.index),labelMil,isLog)
     make1Dplot(df_bgr['new_cases_per_million'],"bgr_daily_cases_per_mil",0,len(df_bgr.index),labelMil,isLog)
     make1Dplot(df_usa['new_cases_per_million'],"usa_daily_cases_per_mil",0,len(df_usa.index),labelMil,isLog)
-    '''
+
     df_can.loc[df_can['new_cases_per_million']<1,'new_cases_per_million']=0.0
     df_usa.loc[df_usa['new_cases_per_million']<1,'new_cases_per_million']=0.0
     df_swiss.loc[df_swiss['new_cases_per_million']<1,'new_cases_per_million']=0.0
