@@ -62,8 +62,9 @@ def main():
     df_pol   = df_all[df_all['location']=='Poland']
     
     df_europe = df_all[df_all['continent']=='Europe']
-                    
-                            
+
+    df_bgr = pd.merge(df_swiss, df_bgr, how='outer', on='date').fillna(0)
+    df_pol = pd.merge(df_swiss, df_pol, how='outer', on='date').fillna(0)
     
     labelDay="Cases / day"
     labelMil="Cases per million / day"
@@ -72,13 +73,13 @@ def main():
     make1Dplot(df_swiss_official['new.infections'],"daily_infections",0,len(df_swiss_official.index),labelDay,isLog)
     make1Dplot(df_can['new_cases']  ,"canada_daily_infections",0,len(df_can.index),labelDay,isLog)
     make1Dplot(df_swiss['new_cases'],"swiss_daily_infections",0,len(df_swiss.index),labelDay,isLog)
-    make1Dplot(df_bgr['new_cases']  ,"bgr_daily_infections",0,len(df_bgr.index),labelDay,isLog)
+    make1Dplot(df_bgr['new_cases_y']  ,"bgr_daily_infections",0,len(df_bgr.index),labelDay,isLog)
     make1Dplot(df_usa['new_cases']  ,"usa_daily_infections",0,len(df_usa.index),labelDay,isLog)
 
     
     make1Dplot(df_can['new_cases_per_million'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
     make1Dplot(df_swiss['new_cases_per_million'],"swiss_daily_cases_per_mil",0,len(df_swiss.index),labelMil,isLog)
-    make1Dplot(df_bgr['new_cases_per_million'],"bgr_daily_cases_per_mil",0,len(df_bgr.index),labelMil,isLog)
+    make1Dplot(df_bgr['new_cases_per_million_y'],"bgr_daily_cases_per_mil",0,len(df_bgr.index),labelMil,isLog)
     make1Dplot(df_usa['new_cases_per_million'],"usa_daily_cases_per_mil",0,len(df_usa.index),labelMil,isLog)
 
     df_can.loc[df_can['new_cases_per_million']<1,'new_cases_per_million']=0.0
@@ -88,7 +89,10 @@ def main():
     make1DplotCompare(df_can['new_cases_per_million'],"Canada",df_usa['new_cases_per_million'],"USA","can_v_usa_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_usa['new_cases_per_million'],"USA","swiss_v_usa_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_can['new_cases_per_million'],"Canada","swiss_v_can_per_mil",labelMil,isLog)
-
+    make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_bgr['new_cases_per_million_y'],"Bulgaria","swiss_v_bgr_per_mill",labelMil,isLog)
+    make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_pol['new_cases_per_million_y'],"Poland","swiss_v_pol_per_mill",labelMil,isLog)
+    make1DplotCompare(df_can['new_cases_per_million'],"Canada",df_bgr['new_cases_per_million_y'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
+                               
     
 if __name__ == '__main__':
     main()
