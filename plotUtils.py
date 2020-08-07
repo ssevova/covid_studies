@@ -177,7 +177,7 @@ def makeHTML(outFileName,title):
         </div>
         """.format(date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
         
-        clist = ['usa','can','swiss','bgr']
+        clist = ['usa','can','swiss','france','spain','bgr']
         for c in clist:
             plots = glob.glob(c+'*.pdf')
             outFile.write("<h2> Country: {country} </h2>".format(country=c))
