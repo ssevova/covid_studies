@@ -63,7 +63,8 @@ def main():
     df_pol   = df_all[df_all['location']=='Poland']
     
     df_europe = df_all[df_all['continent']=='Europe']
-
+    
+    
     df_bgr = pd.merge(df_swiss, df_bgr, how='outer', on='date').fillna(0)
     df_pol = pd.merge(df_swiss, df_pol, how='outer', on='date').fillna(0)
     
@@ -92,6 +93,10 @@ def main():
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_bgr['new_cases_per_million_y'],"Bulgaria","swiss_v_bgr_per_mill",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_pol['new_cases_per_million_y'],"Poland","swiss_v_pol_per_mill",labelMil,isLog)
     make1DplotCompare(df_can['new_cases_per_million'],"Canada",df_bgr['new_cases_per_million_y'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
+    
+    make1DplotCompare(df_usa['new_cases_per_million'],"USA cases",df_usa['new_deaths_per_million'],"USA deaths","usa_cases_v_deaths_per_mill",labelMil,True)
+    make1DplotCompare(df_can['new_cases_per_million'],"CAN cases",df_can['new_deaths_per_million'],"CAN deaths","can_cases_v_deaths_per_mill",labelMil,True)
+    make1DplotCompare(df_swiss['new_cases_per_million'],"SWISS cases",df_swiss['new_deaths_per_million'],"SWISS deaths","swiss_cases_v_deaths_per_mill",labelMil,True)
     
     makeHTML("covid19_cases.html","COVID-19 plots")
     

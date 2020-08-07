@@ -17,8 +17,6 @@ import matplotlib.ticker as tick
 ###############################################################################  
 def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog): 
     """Plot a histogram with error bars."""
-    print(np.array(arr1))
-    print(np.array(arr2))
 
     fig = plt.figure(figsize=(9, 6),dpi=100)
     gs = gridspec.GridSpec(7, 1, hspace=0.0, wspace=0.0)
@@ -52,10 +50,10 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     ax1.legend()
     
     ratio = getRatio(np.array(arr1),np.array(arr2))
-    print(len(np.array(arr1)))
-    print(len(np.array(arr2)))
-    print(len(ratio))
-    print (ratio)
+    print('Size arr1: {}'.format(len(np.array(arr1))))
+    print('Size arr2: {}'.format(len(np.array(arr2))))
+    print('Size ratio: {}'.format(len(ratio)))
+    print('Ratio array: {}'.format(ratio))
     bin_centers = range(0,len(np.array(arr2)))
 
     ax2.plot(bin_centers, ratio, color='black', marker='.')
@@ -67,7 +65,8 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
 
     if isLog==True:
         ax1.set_yscale('log')
-        pltname = '{}_log.png'.format(hname)
+        ax1.set_ylim(0.01,2*max(np.array(arr1)))
+        pltname = '{}_log.pdf'.format(hname)
     else:
         ax1.set_yscale('linear')
         pltname = '{}.pdf'.format(hname)
@@ -166,30 +165,32 @@ def makeHTML(outFileName,title):
         <html lang="en">
         <head>
         <meta charset="utf-8">
-        <title>Covid-19 cases</title>
+        <title>covid-19 cases</title>
         <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         </head>
         <body>
         <div class="container">
-        <h1> Covid-19 cases </h1> 
+        <h1> covid-19 cases </h1> 
         <p>Last updated: {date}</p> 
         </div>
-        <table style="width:100%">
         """.format(date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+        
+        clist = ['usa','can','swiss','bgr']
+        for c in clist:
+            plots = glob.glob(c+'*.pdf')
+            outFile.write("<h2> Country: {country} </h2>".format(country=c))
+            outFile.write('<table style="width:100%">')
+            for i in range(0,len(plots)):
+                offset = 2
+                if i==0 or i%3==0: 
+                    outFile.write("<tr>\n")
+                outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"" + plots[i] + "\"><img src=\"" + plots[i] + "\" alt=\"" + plots[i] + "\" width=\"100%\"></a></td>\n")
+                if (i>offset and (i-offset)%3==0) or i==len(plots): 
+                    outFile.write("</tr>\n")
 
-        for i in range(0,len(plots)):
-            offset = 2
-            if i==0 or i%3==0: 
-                outFile.write("<tr>\n")
-            outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"" + plots[i] + "\"><img src=\"" + plots[i] + "\" alt=\"" + plots[i] + "\" width=\"100%\"></a></td>\n")
-            if i==offset: 
-                outFile.write("</tr>\n")
-            elif (i>offset and (i-offset)%3==0) or i==len(plots): 
-                outFile.write("</tr>\n")
-            
-        outFile.write("</table>\n")
+            outFile.write("</table>\n")
         outFile.write("</body>\n")
         outFile.write("</html>")
         
