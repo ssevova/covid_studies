@@ -12,8 +12,8 @@ import os
 import re
 import glob
 import shutil
-import uproot as up
-import uproot_methods
+#import uproot as up
+#import uproot_methods
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ def getArgumentParser():
                         '--infile',
                         dest='infile',
                         help='Input CSV file',
-                        default='data-VgjQz.csv')
+                        default='/afs/cern.ch/work/s/ssevova/public/covid_studies/owid-covid-data.csv')
     parser.add_argument('-o',
                         '--outdir',
                         dest='outdir',
@@ -51,10 +51,11 @@ def main():
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path)
+    os.chdir(path)
 
-    df_all = pd.read_csv("owid-covid-data.csv")
-    print (df_all.columns)
-    df_swiss_official = pd.read_csv(options.infile)
+    df_all = pd.read_csv(options.infile)
+
+    #df_swiss_official = pd.read_csv(options.infile)
     df_swiss = df_all[df_all['location']=='Switzerland']
     df_bgr   = df_all[df_all['location']=='Bulgaria']
     df_usa   = df_all[df_all['location']=='United States']
@@ -70,12 +71,11 @@ def main():
     labelMil="Cases per million / day"
     isLog=False
 
-    make1Dplot(df_swiss_official['new.infections'],"daily_infections",0,len(df_swiss_official.index),labelDay,isLog)
+    #make1Dplot(df_swiss_official['new.infections'],"daily_infections",0,len(df_swiss_official.index),labelDay,isLog)
     make1Dplot(df_can['new_cases']  ,"canada_daily_infections",0,len(df_can.index),labelDay,isLog)
     make1Dplot(df_swiss['new_cases'],"swiss_daily_infections",0,len(df_swiss.index),labelDay,isLog)
     make1Dplot(df_bgr['new_cases_y']  ,"bgr_daily_infections",0,len(df_bgr.index),labelDay,isLog)
     make1Dplot(df_usa['new_cases']  ,"usa_daily_infections",0,len(df_usa.index),labelDay,isLog)
-
     
     make1Dplot(df_can['new_cases_per_million'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
     make1Dplot(df_swiss['new_cases_per_million'],"swiss_daily_cases_per_mil",0,len(df_swiss.index),labelMil,isLog)
@@ -92,7 +92,8 @@ def main():
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_bgr['new_cases_per_million_y'],"Bulgaria","swiss_v_bgr_per_mill",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_per_million'],"Switzerland",df_pol['new_cases_per_million_y'],"Poland","swiss_v_pol_per_mill",labelMil,isLog)
     make1DplotCompare(df_can['new_cases_per_million'],"Canada",df_bgr['new_cases_per_million_y'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
-                               
+    
+    makeHTML("covid19_cases.html","COVID-19 plots")
     
 if __name__ == '__main__':
     main()

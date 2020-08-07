@@ -4,7 +4,7 @@ import os
 import shutil
 import glob
 import math
-
+import datetime
 import numpy as np
 import numpy.lib.recfunctions as recfn
 
@@ -155,26 +155,41 @@ def flatten_array(arr1,arr2):
         arr2Flat = arr2
     return arr1Flat, arr2Flat
 #-----------------------------------------------------
-def makeHTML(outFile,title):
+def makeHTML(outFileName,title):
 
     plots = glob.glob('*.pdf')
-    f = open(outFile,"w+")
-    f.write("<!DOCTYPE html\n")
-    f.write(" PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n")
-    f.write("<html>\n")
-    f.write("<head><title>"+ title +" </title></head>\n")
-    f.write("<body bgcolor=\"EEEEEE\">\n")
-    f.write("<table border=\"0\" cellspacing=\"5\" width=\"100%\">\n")
-    for i in range(0,len(plots)):
-        offset = 2
-        if i==0 or i%3==0: f.write("<tr>\n")
-        f.write("<td width=\"25%\"><a target=\"_blank\" href=\"" + plots[i] + "\"><img src=\"" + plots[i] + "\" alt=\"" + plots[i] + "\" width=\"100%\"></a></td>\n")
-        if i==offset: 
-            f.write("</tr>\n")
-        elif (i>offset and (i-offset)%3==0) or i==len(plots): 
-            f.write("</tr>\n")
+
+    with open(outFileName, 'w') as outFile:
+        # write HTML header
+        outFile.write("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <title>Covid-19 cases</title>
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        </head>
+        <body>
+        <div class="container">
+        <h1> Covid-19 cases </h1> 
+        <p>Last updated: {date}</p> 
+        </div>
+        <table style="width:100%">
+        """.format(date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+
+        for i in range(0,len(plots)):
+            offset = 2
+            if i==0 or i%3==0: 
+                outFile.write("<tr>\n")
+            outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"" + plots[i] + "\"><img src=\"" + plots[i] + "\" alt=\"" + plots[i] + "\" width=\"100%\"></a></td>\n")
+            if i==offset: 
+                outFile.write("</tr>\n")
+            elif (i>offset and (i-offset)%3==0) or i==len(plots): 
+                outFile.write("</tr>\n")
             
-    f.write("</table>\n")
-    f.write("</body>\n")
-    f.write("</html>")
-    f.close()
+        outFile.write("</table>\n")
+        outFile.write("</body>\n")
+        outFile.write("</html>")
+        
