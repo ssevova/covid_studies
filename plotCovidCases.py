@@ -118,7 +118,7 @@ def main():
     make1DplotCompare(df_can['new_cases_per_million'],"Canada",df_bgr['new_cases_per_million_y'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_per_million'],"USA",df_spain['new_cases_per_million'],"Spain","usa_v_spain_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_per_million'],"USA",df_france['new_cases_per_million'],"France","usa_v_france_per_mill",labelMil,isLog)
-    make1DplotCompare(df_usa['new_cases_per_million'],"USA",df_eu['new_cases_per_million'],"Spain+Italy+France+Switzerland+Germany+Belgium+Austria+UK","usa_v_eu_per_mill",labelMil,isLog)
+    make1DplotCompare(df_usa['new_cases_per_million'],"USA (pop=331,002,647)",df_eu['new_cases_per_million'],"Spain+Italy+France+Switzerland+Germany+Belgium+Austria+UK (pop=353,410,706)","usa_v_eu_per_mill",labelMil,isLog)
     
     make1DplotCompare(df_usa['new_cases_per_million'],"USA cases",df_usa['new_deaths_per_million'],"USA deaths","usa_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_can['new_cases_per_million'],"CAN cases",df_can['new_deaths_per_million'],"CAN deaths","can_cases_v_deaths_per_mill",labelMil,True)
