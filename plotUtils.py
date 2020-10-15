@@ -24,7 +24,7 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     ax1.tick_params(labelbottom=False)
     ax2 = fig.add_subplot(gs[5:7], sharex=ax1)
     ax2.yaxis.set_major_locator(tick.LinearLocator(numticks=5))
-    ax2.xaxis.set_major_locator(tick.MaxNLocator(symmetric=True, prune='both', min_n_ticks=5, nbins=4))
+    ax2.xaxis.set_major_locator(tick.MaxNLocator(symmetric=True, prune=None, min_n_ticks=6, nbins=6))
     ax2.autoscale(axis="x", tight=True)
 
     ax1.bar(range(0,len(np.array(arr1))),
@@ -73,7 +73,6 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
 
     plt.savefig(pltname)       
     print('saved {}'.format(pltname))
-    plt.clf()
 #-----------------------------------------------------
 def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog): 
     """Plot a histogram with error bars."""
@@ -81,11 +80,22 @@ def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog):
 
     fig, ax1 = plt.subplots(1,1)    
 
-    ax1.bar(range(xmin,xmax),
-            np.array(arr1),
-            color='g',
-            width=1,
-            label='')
+    if xname == "swiss_daily_infections":
+        ar1 = np.array(arr1)
+        friends = np.zeros(shape=len(ar1))
+        
+        friends[232] = 2
+        ar1[232] = ar1[232]-friends[232]
+        
+        ax1.bar(range(xmin,xmax), friends, color='#FE01B1', width=1, label='')
+        ax1.bar(range(xmin,xmax), ar1, color='g', width=1, label='',bottom=friends)
+    else:
+        
+        ax1.bar(range(xmin,xmax),
+                np.array(arr1),
+                color='g',
+                width=1,
+                label='')
     
     ax1.set_ylabel(ylabel)
     ax1.set_xlabel('Days')
@@ -94,6 +104,35 @@ def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog):
 
     ax1.hlines([100,200],xmin,xmax,colors='grey',linestyles='--')
 
+    if isLog==True:
+        ax1.set_yscale('log')
+        ax1.set_ylim(0.01,2*max(np.array(arr1)))
+        pltname = '{}_log.pdf'.format(xname)
+    else:
+        ax1.set_yscale('linear')
+        pltname = '{}.pdf'.format(xname)
+
+    plt.savefig(pltname)       
+    print('saved {}'.format(pltname))
+#-----------------------------------------------------
+def make1DplotSIR(arr1,t,I,xname,xmin,xmax,ylabel,isLog): 
+    """Plot a histogram with error bars."""
+    print(np.array(arr1))
+
+    fig, ax1 = plt.subplots(1,1)    
+
+    ax1.bar(range(xmin,xmax),
+            np.array(arr1),
+            color='b',
+            alpha=0.5,
+            width=1,
+            label='')
+    ax1.plot(t,I,'r',alpha=0.8,lw=2,label='Infected, beta=0.2, gamma=1/10')
+    ax1.set_ylabel(ylabel)
+    ax1.set_xlabel('Days')
+    ax1.set_xlim(xmin,xmax)
+    ax1.set_ylim(0,max(I)+20)
+    ax1.legend()
     
     if isLog==True:
         ax1.set_yscale('log')
@@ -104,7 +143,6 @@ def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog):
 
     plt.savefig(pltname)       
     print('saved {}'.format(pltname))
-    plt.clf()
 #-----------------------------------------------------
 
 def make2Dplot(arr1,arr2,xname,yname):
