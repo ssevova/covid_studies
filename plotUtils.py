@@ -215,10 +215,30 @@ def makeHTML(outFileName,title):
         </div>
         """.format(date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
         
-        clist = ['usa','can','swiss','france','spain','bgr']
+        clist = ['usa','can','swiss','france','spain','bgr','pol','por']
+        cdict = {
+            'usa' : 'United States',
+            'can' : 'Canada',
+            'swiss' : 'Switzerland',
+            'france' : 'France',
+            'spain' : 'Spain',
+            'bgr' : 'Bulgaria',
+            'pol' : 'Poland',
+            'por' : 'Portugal'
+        }
+        fdict = {
+            'usa' : 'us',
+            'can' : 'ca',
+            'swiss' : 'ch',
+            'france' : 'fr',
+            'spain' : 'es',
+            'bgr' : 'bg',
+            'pol' : 'pl',
+            'por' : 'pt'
+        }
         for c in clist:
             plots = glob.glob(c+'*.pdf')
-            outFile.write("<h2> Country: {country} </h2>".format(country=c))
+            outFile.write("<h2> {country} <img src='https://www.countryflags.io/{flag}/shiny/64.png'> </h2>".format(country=cdict[c], flag=fdict[c]))
             outFile.write('<table style="width:100%">')
             for i in range(0,len(plots)):
                 offset = 2

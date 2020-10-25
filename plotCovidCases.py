@@ -65,6 +65,7 @@ def main():
     print(df_all.columns)
     #df_swiss_official = pd.read_csv(options.infile)
     df_swiss = df_all[df_all['location']=='Switzerland']
+    df_por   = df_all[df_all['location']=='Portugal']
     df_bgr   = df_all[df_all['location']=='Bulgaria']
     df_usa   = df_all[df_all['location']=='United States']
     df_can   = df_all[df_all['location']=='Canada']
@@ -94,6 +95,7 @@ def main():
 
     df_bgr = pd.merge(df_swiss, df_bgr, how='outer', on='date').fillna(0)
     df_pol = pd.merge(df_swiss, df_pol, how='outer', on='date').fillna(0)
+    df_por = pd.merge(df_swiss, df_por, how='outer', on='date').fillna(0)
 
     ###### Fill NaN with 0 ######
     df_swiss = df_swiss.fillna(0)
@@ -104,6 +106,7 @@ def main():
     df_france = df_france.fillna(0)
     df_pol = df_pol.fillna(0)
     df_bgr = df_bgr.fillna(0)
+    df_por = df_por.fillna(0)
     
     ######################## Experimental stuff ##########################
     ## SIR fits
@@ -145,6 +148,8 @@ def main():
     #make1DplotSIR(df_usa['total_cases'],t_US,I_US,"usa_total_cases_SIR_fit",0,len(df_usa.index),"Total cases",isLog)
     make1Dplot(df_france['new_cases_smoothed'],"france_daily_infections",0,len(df_france.index),labelDay,isLog)
     make1Dplot(df_spain['new_cases_smoothed'] ,"spain_daily_infections",0,len(df_spain.index),labelDay,isLog)
+    make1Dplot(df_por['new_cases_smoothed_y'] ,"portugal_daily_infections",0,len(df_por.index),labelDay,isLog)
+    make1Dplot(df_pol['new_cases_smoothed_y'] ,"poland_daily_infections",0,len(df_pol.index),labelDay,isLog)
     
     make1Dplot(df_can['new_cases_smoothed_per_million'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
     make1Dplot(df_swiss['new_cases_smoothed_per_million'],"swiss_daily_cases_per_mil",0,len(df_swiss.index),labelMil,isLog)
@@ -152,6 +157,8 @@ def main():
     make1Dplot(df_usa['new_cases_smoothed_per_million'],"usa_daily_cases_per_mil",0,len(df_usa.index),labelMil,isLog)
     make1Dplot(df_france['new_cases_smoothed_per_million'],"france_daily_cases_per_mil",0,len(df_france.index),labelMil,isLog)
     make1Dplot(df_spain['new_cases_smoothed_per_million'],"spain_daily_cases_per_mil",0,len(df_spain.index),labelMil,isLog)
+    make1Dplot(df_por['new_cases_smoothed_per_million_y'],"portugal_daily_cases_per_mil",0,len(df_por.index),labelMil,isLog)
+    make1Dplot(df_pol['new_cases_smoothed_per_million_y'],"poland_daily_cases_per_mil",0,len(df_pol.index),labelMil,isLog)
     
     df_can.loc[df_can['new_cases_per_million']<1,'new_cases_per_million']=0.0
     df_usa.loc[df_usa['new_cases_per_million']<1,'new_cases_per_million']=0.0
@@ -159,12 +166,15 @@ def main():
     df_eu.loc[df_eu['new_cases_smoothed_per_million']<1,'new_cases_smoothed_per_million']=0.0
     df_swiss.loc[df_swiss['new_cases_per_million']<1,'new_cases_per_million']=0.0
     df_swiss.loc[df_swiss['new_cases_smoothed_per_million']<1,'new_cases_smoothed_per_million']=0.0
+    df_por.loc[df_por['new_cases_smoothed_per_million_y']<1,'new_cases_smoothed_per_million_y']=0.0
+    df_pol.loc[df_pol['new_cases_smoothed_per_million_y']<1,'new_cases_smoothed_per_million_y']=0.0
     
     make1DplotCompare(df_can['new_cases_smoothed_per_million'],"Canada",df_usa['new_cases_smoothed_per_million'],"USA","can_v_usa_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_usa['new_cases_smoothed_per_million'],"USA","swiss_v_usa_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_can['new_cases_smoothed_per_million'],"Canada","swiss_v_can_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_bgr['new_cases_smoothed_per_million_y'],"Bulgaria","swiss_v_bgr_per_mill",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_pol['new_cases_smoothed_per_million_y'],"Poland","swiss_v_pol_per_mill",labelMil,isLog)
+    make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_por['new_cases_smoothed_per_million_y'],"Portugal","swiss_v_por_per_mill",labelMil,isLog)
     make1DplotCompare(df_can['new_cases_smoothed_per_million'],"Canada",df_bgr['new_cases_smoothed_per_million_y'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_spain['new_cases_smoothed_per_million'],"Spain","usa_v_spain_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_france['new_cases_smoothed_per_million'],"France","usa_v_france_per_mill",labelMil,isLog)
@@ -180,9 +190,11 @@ def main():
     make1DplotCompare(df_france['new_cases_smoothed_per_million'],"FRANCE cases",df_france['new_deaths_smoothed_per_million'],"FRANCE deaths","france_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_spain['new_cases_smoothed_per_million'],"SPAIN cases",df_spain['new_deaths_smoothed_per_million'],"SPAIN deaths","spain_cases_v_deaths_per_mill",labelMil,True)    
     make1DplotCompare(df_bgr['new_cases_smoothed_per_million_y'],"BGR cases",df_bgr['new_deaths_smoothed_per_million_y'],"BGR deaths","bgr_cases_v_deaths_per_mill",labelMil,True)    
+    make1DplotCompare(df_pol['new_cases_smoothed_per_million_y'],"POL cases",df_bgr['new_deaths_smoothed_per_million_y'],"POL deaths","pol_cases_v_deaths_per_mill",labelMil,True)    
+    make1DplotCompare(df_por['new_cases_smoothed_per_million_y'],"POR cases",df_bgr['new_deaths_smoothed_per_million_y'],"POR deaths","por_cases_v_deaths_per_mill",labelMil,True)    
 
-    make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_usa['new_cases_smoothed'],"USA cases","usa_tests_v_cases",labelDay,isLog)
-    make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_eu['new_tests_smoothed'],"ES+IT+FR+CH+DE+BE+AU+UK tests","usa_v_eu_tests",labelDay,isLog)
+    make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_usa['new_cases_smoothed'],"USA cases","usa_tests_v_cases","Tests / day",isLog)
+    make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_eu['new_tests_smoothed'],"ES+IT+FR+CH+DE+BE+AU+UK tests","usa_v_eu_tests","Tests / day",isLog)
 
     makeHTML("covid19_cases.html","COVID-19 plots")
 
