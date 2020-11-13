@@ -7,7 +7,7 @@ import math
 import datetime
 import numpy as np
 import numpy.lib.recfunctions as recfn
-
+import pandas as pd
 # Matplotlib                                                                                  
 import matplotlib;matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -15,6 +15,23 @@ import matplotlib.colors as mcolors
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as tick
 ###############################################################################  
+def makeOverlayPlot(df_array,names,ylabel,isLog):
+    fig, ax1 = plt.subplots(1,1)  
+
+    for name,df in zip(names,df_array):
+        if name == 'EU': continue
+        days = len(np.array(df.new_cases_smoothed_per_100k))
+        ax1.plot(range(0,days),
+                 np.array(df.new_cases_smoothed_per_100k),
+                 linestyle='-',
+                 label=name)
+    ax1.set_xlabel('Days')
+    ax1.set_ylabel(ylabel)
+    ax1.set_xlim(0,days)
+    ax1.legend()
+    plt.savefig('all_cases_per_100k.pdf')
+    print('saved all_cases_per_100k.pdf')
+    
 def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog): 
     """Plot a histogram with error bars."""
 
@@ -214,7 +231,12 @@ def makeHTML(outFileName,title):
         <p>Last updated: {date}</p> 
         </div>
         """.format(date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
-        
+        outFile.write("<h2> Cases per 100k </h2>")
+        outFile.write('<table style="width:100%">')
+        outFile.write("<tr>\n")
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
+        outFile.write("</tr>\n")
+        outFile.write("</table>\n")
         clist = ['usa','can','swiss','france','spain','bgr','pol','por']
         cdict = {
             'usa' : 'United States',
