@@ -137,6 +137,7 @@ def main():
             getCases100k(name,df)
 
     makeOverlayPlot(dfs, names, label100k,isLog)    
+    makeOverlayPlot(dfs, names, label100k,True)    
     ######################## Experimental stuff ##########################
     ## SIR fits
     N_US = df_usa.population.iloc[0]

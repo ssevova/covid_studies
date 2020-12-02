@@ -20,17 +20,31 @@ def makeOverlayPlot(df_array,names,ylabel,isLog):
 
     for name,df in zip(names,df_array):
         if name == 'EU': continue
+        if name == 'CHE': 
+            latest_swiss_cases = df.new_cases_smoothed_per_100k.iloc[-1]
+            #print('latest swiss cases {}'.format(latest_swiss_cases))
         days = len(np.array(df.new_cases_smoothed_per_100k))
         ax1.plot(range(0,days),
                  np.array(df.new_cases_smoothed_per_100k),
                  linestyle='-',
+                 linewidth=0.85,
                  label=name)
+    ax1.tick_params(direction='in', left=True, right=True)
     ax1.set_xlabel('Days')
     ax1.set_ylabel(ylabel)
     ax1.set_xlim(0,days)
+    ax1.hlines(latest_swiss_cases+60,0,days,colors='cornflowerblue',linestyle='--',linewidth=0.85,label='CHE+60')
     ax1.legend()
-    plt.savefig('all_cases_per_100k.pdf')
-    print('saved all_cases_per_100k.pdf')
+
+    if isLog:
+        ax1.set_ylim(10E-1,latest_swiss_cases+100)
+        ax1.set_yscale('log')
+        plt.savefig('all_cases_per_100k_log.pdf')
+        print('saved all_cases_per_100k_log.pdf')
+    else:
+        plt.savefig('all_cases_per_100k.pdf')
+        print('saved all_cases_per_100k.pdf')
+
     
 def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog): 
     """Plot a histogram with error bars."""
@@ -38,22 +52,33 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     fig = plt.figure(figsize=(9, 6),dpi=100)
     gs = gridspec.GridSpec(7, 1, hspace=0.0, wspace=0.0)
     ax1 = fig.add_subplot(gs[0:5])
-    ax1.tick_params(labelbottom=False)
+    ax1.tick_params(direction='in',left=True, right=True,labelbottom=False)
     ax2 = fig.add_subplot(gs[5:7], sharex=ax1)
+    ax2.tick_params(direction='in',left=True, right=True)
     ax2.yaxis.set_major_locator(tick.LinearLocator(numticks=5))
     ax2.xaxis.set_major_locator(tick.MaxNLocator(symmetric=True, prune=None, min_n_ticks=6, nbins=6))
     ax2.autoscale(axis="x", tight=True)
 
-    ax1.bar(range(0,len(np.array(arr1))),
-            np.array(arr1),
+    if len(np.array(arr1)) > len(np.array(arr2)):
+        n_arr1 = arr1[:-1]
+        n_arr2 = arr2
+    elif len(np.array(arr2)) > len(np.array(arr1)):
+        n_arr1 = arr1
+        n_arr2 = arr2[:-1]
+    else:
+        n_arr1 = arr1
+        n_arr2 = arr2
+
+    ax1.bar(range(0,len(np.array(n_arr1))),
+            np.array(n_arr1),
             color='r',
             width=1.0,
             alpha=0.5,
             label=arr1Label,
             zorder=-1)
     
-    ax1.bar(range(0,len(np.array(arr2))),
-            np.array(arr2),
+    ax1.bar(range(0,len(np.array(n_arr2))),
+            np.array(n_arr2),
             color='b',
             width=1.0,
             alpha=0.5,
@@ -62,27 +87,27 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     
     ax1.set_ylabel(ylabel)
     ax1.set_xlabel('Days')
-    ax1.set_ylim(0,max(max(np.array(arr1)),max(np.array(arr2)))+20)
-    ax1.set_xlim(0,len(np.array(arr2)))
+    ax1.set_ylim(0,max(max(np.array(n_arr1)),max(np.array(n_arr2)))+20)
+    ax1.set_xlim(0,len(np.array(n_arr2)))
     ax1.legend()
     
-    ratio = getRatio(np.array(arr1),np.array(arr2))
-    print('Size arr1: {}'.format(len(np.array(arr1))))
-    print('Size arr2: {}'.format(len(np.array(arr2))))
-    print('Size ratio: {}'.format(len(ratio)))
-    print('Ratio array: {}'.format(ratio))
-    bin_centers = range(0,len(np.array(arr2)))
+    ratio = getRatio(np.array(n_arr1),np.array(n_arr2))
+    # print('Size arr1: {}'.format(len(np.array(n_arr1))))
+    # print('Size arr2: {}'.format(len(np.array(n_arr2))))
+    # print('Size ratio: {}'.format(len(ratio)))
+    # print('Ratio array: {}'.format(ratio))
+    bin_centers = range(0,len(np.array(n_arr2)))
 
     ax2.plot(bin_centers, ratio, color='black', marker='.')
     
-    ax2.set_xlim(0,len(np.array(arr2)))
+    ax2.set_xlim(0,len(np.array(n_arr2)))
     ax2.set_ylim(0,2)
     ax2.set_ylabel("Ratio")
     ax2.set_xlabel("Days")    
 
     if isLog==True:
         ax1.set_yscale('log')
-        ax1.set_ylim(0.01,2*max(np.array(arr1)))
+        ax1.set_ylim(0.01,2*max(np.array(n_arr1)))
         pltname = '{}_log.pdf'.format(hname)
     else:
         ax1.set_yscale('linear')
@@ -93,7 +118,7 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
 #-----------------------------------------------------
 def make1Dplot(arr1,xname,xmin,xmax,ylabel,isLog): 
     """Plot a histogram with error bars."""
-    print(np.array(arr1))
+    #print(np.array(arr1))
 
     fig, ax1 = plt.subplots(1,1)    
 
@@ -234,7 +259,8 @@ def makeHTML(outFileName,title):
         outFile.write("<h2> Cases per 100k </h2>")
         outFile.write('<table style="width:100%">')
         outFile.write("<tr>\n")
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n")         
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k_log.pdf\"><img src=\"all_cases_per_100k_log.pdf\" alt=\"all_cases_per_100k_log.pdf\" width=\"100%\"></a></td>\n") 
         outFile.write("</tr>\n")
         outFile.write("</table>\n")
         clist = ['usa','can','swiss','france','spain','bgr','pol','por']
