@@ -15,7 +15,7 @@ import matplotlib.colors as mcolors
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as tick
 ###############################################################################  
-def makeOverlayPlot(df_array,names,ylabel,isLog):
+def makeOverlayPlot(df_array,names,ylabel,xlabel,isLog):
     fig, ax1 = plt.subplots(1,1)  
 
     for name,df in zip(names,df_array):
@@ -30,7 +30,7 @@ def makeOverlayPlot(df_array,names,ylabel,isLog):
                  linewidth=0.85,
                  label=name)
     ax1.tick_params(direction='in', left=True, right=True)
-    ax1.set_xlabel('Days')
+    ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
     ax1.set_xlim(0,days)
     ax1.hlines(latest_swiss_cases+60,0,days,colors='cornflowerblue',linestyle='--',linewidth=0.85,label='CHE+60')
@@ -42,8 +42,12 @@ def makeOverlayPlot(df_array,names,ylabel,isLog):
         plt.savefig('all_cases_per_100k_log.pdf')
         print('saved all_cases_per_100k_log.pdf')
     else:
-        plt.savefig('all_cases_per_100k.pdf')
-        print('saved all_cases_per_100k.pdf')
+        if xlabel == '2 week period':
+            plt.savefig('2weeks_cases_per_100k.pdf')
+            print('saved 2weeks_cases_per_100k.pdf')
+        else:
+            plt.savefig('all_cases_per_100k.pdf')
+            print('saved all_cases_per_100k.pdf')
 
     
 def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog): 
@@ -260,7 +264,8 @@ def makeHTML(outFileName,title):
         outFile.write('<table style="width:100%">')
         outFile.write("<tr>\n")
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n")         
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k_log.pdf\"><img src=\"all_cases_per_100k_log.pdf\" alt=\"all_cases_per_100k_log.pdf\" width=\"100%\"></a></td>\n") 
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k_log.pdf\"><img src=\"all_cases_per_100k_log.pdf\" alt=\"all_cases_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2week_cases_per_100k.pdf\" alt=\"2week_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
         outFile.write("</tr>\n")
         outFile.write("</table>\n")
         clist = ['usa','can','swiss','france','spain','bgr','pol','por']

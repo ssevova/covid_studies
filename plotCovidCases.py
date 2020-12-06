@@ -42,11 +42,19 @@ def getArgumentParser():
 def getCases100k(name,df):
     if name in ['BGR', 'POL', 'PRT']:
         df['new_cases_smoothed_per_100k'] = (df.new_cases_smoothed_y/df.population_y.iloc[-1])*100000
-        print('{country} cases per 100 000: {cases}'.format(country=df.location_y.iloc[-1], cases=df.new_cases_smoothed_per_100k.iloc[-1]))
+        #print('{country} cases per 100 000: {cases}'.format(country=df.location_y.iloc[-1], cases=df.new_cases_smoothed_per_100k.iloc[-1]))
     else:
         df['new_cases_smoothed_per_100k'] = (df.new_cases_smoothed/df.population.iloc[-1])*100000
-        print('{country} cases per 100 000: {cases}'.format(country=df.location.iloc[-1], cases=df.new_cases_smoothed_per_100k.iloc[-1]))
+        #print('{country} cases per 100 000: {cases}'.format(country=df.location.iloc[-1], cases=df.new_cases_smoothed_per_100k.iloc[-1]))
 
+def getTwoWeekTotCases(name,df):
+    getCases100k(name,df)
+    m_df = df['new_cases_smoothed_per_100k']
+    m_df = m_df.reset_index()
+    d = {'index':'last', 'new_cases_smoothed_per_100k':'sum'}
+    
+    res = m_df.groupby(m_df.index // 14).agg(d)
+    return res
 
 def deriv(y, t, N, beta, gamma):
     S, I, R = y
@@ -125,6 +133,7 @@ def main():
     ### Set min cases to 0 (not negative)
     dfs = [df_swiss, df_usa, df_can, df_bgr, df_pol, df_por, df_spain, df_france, df_eu]
     names = ['CHE', 'USA', 'CAN', 'BGR', 'POL', 'PRT', 'ESP', 'FRA', 'EU']
+    int_dfs = []
     for name,df in zip(names,dfs):
         if name in ['POL', 'PRT', 'BGR']:
             df.loc[df['new_cases_smoothed_y']<1, 'new_cases_smoothed_y']=0.0
@@ -135,9 +144,11 @@ def main():
 
         if name != 'EU':
             getCases100k(name,df)
-
-    makeOverlayPlot(dfs, names, label100k,isLog)    
-    makeOverlayPlot(dfs, names, label100k,True)    
+            int_dfs.append(getTwoWeekTotCases(name,df))
+            
+    makeOverlayPlot(dfs, names, label100k, 'Days', isLog)
+    makeOverlayPlot(dfs, names, label100k, 'Days', True)
+    makeOverlayPlot(int_dfs, names, 'Total cases per 100k / 2 weeks', '2 week period', isLog)
     ######################## Experimental stuff ##########################
     ## SIR fits
     N_US = df_usa.population.iloc[0]
