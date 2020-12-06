@@ -265,7 +265,7 @@ def makeHTML(outFileName,title):
         outFile.write("<tr>\n")
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n")         
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k_log.pdf\"><img src=\"all_cases_per_100k_log.pdf\" alt=\"all_cases_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2week_cases_per_100k.pdf\" alt=\"2week_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2weeks_cases_per_100k.pdf\" alt=\"2weeks_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
         outFile.write("</tr>\n")
         outFile.write("</table>\n")
         clist = ['usa','can','swiss','france','spain','bgr','pol','por']
