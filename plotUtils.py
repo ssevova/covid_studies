@@ -15,43 +15,68 @@ import matplotlib.colors as mcolors
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as tick
 ###############################################################################  
-def makeOverlayPlot(df_array,names,ylabel,xlabel,isLog):
+def makeOverlayPlot(df_array,names,col,ylabel,xlabel,isLog):
+
+    if col == 'cases':
+        colName = 'new_cases_smoothed_per_100k'
+    elif col == 'vax100k':
+        colName = 'new_vaccinations_smoothed_per_100k'
+    elif col == 'vax':
+        colName = 'vax_per_pop'
+        
     fig, ax1 = plt.subplots(1,1)  
 
     for name,df in zip(names,df_array):
         if name == 'EU': continue
-        if name == 'CHE': 
-            latest_swiss_cases = df.new_cases_smoothed_per_100k.iloc[-1]
-            #print('latest swiss cases {}'.format(latest_swiss_cases))
-        days = len(np.array(df.new_cases_smoothed_per_100k))
-        ax1.plot(range(0,days),
-                 np.array(df.new_cases_smoothed_per_100k),
-                 linestyle='-',
-                 linewidth=0.85,
-                 label=name)
+        if name == 'CHE':
+            latest_swiss_ = df[colName].iloc[-1]
+        days = len(np.array(df[colName]))
+        if col == 'cases': start = 0
+        else:
+            start = 310
+            df = df.iloc[310:]
+        ax1.plot(range(start,days), np.array(df[colName]), linestyle='-', linewidth=0.85, label=name)
     ax1.tick_params(direction='in', left=True, right=True)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
-    ax1.set_xlim(0,days)
-    ax1.hlines(latest_swiss_cases+60,0,days,colors='cornflowerblue',linestyle='--',linewidth=0.85,label='CHE+60')
+    ax1.set_xlim(start,days)
+    #ax1.hlines(latest_swiss_cases+60,0,days,colors='cornflowerblue',linestyle='--',linewidth=0.85,label='CHE+60')
     ax1.legend()
 
     if isLog:
-        ax1.set_ylim(10E-1,latest_swiss_cases+100)
+        ax1.set_ylim(10E0,latest_swiss_+1000)
         ax1.set_yscale('log')
-        plt.savefig('all_cases_per_100k_log.pdf')
-        print('saved all_cases_per_100k_log.pdf')
+        plt.savefig('all_'+colName+'_log.pdf')
+        print('saved all_'+colName+'_log.pdf')
     else:
         if xlabel == '2 week period':
             plt.savefig('2weeks_cases_per_100k.pdf')
             print('saved 2weeks_cases_per_100k.pdf')
         else:
-            plt.savefig('all_cases_per_100k.pdf')
-            print('saved all_cases_per_100k.pdf')
+            plt.savefig('all_'+colName+'.pdf')
+            print('saved all_'+colName+'.pdf')
 
     
 def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog): 
     """Plot a histogram with error bars."""
+
+    print('Length of arr1: {}'.format(len(np.array(arr1))))
+    print('Length of arr2: {}'.format(len(np.array(arr2))))
+
+    if len(np.array(arr1)) > len(np.array(arr2)):
+        n = len(np.array(arr1)) - len(np.array(arr2))
+        n_arr1 = arr1[:-n]
+        n_arr2 = arr2
+    elif len(np.array(arr2)) > len(np.array(arr1)):
+        n = len(np.array(arr2)) - len(np.array(arr1))
+        n_arr1 = arr1
+        n_arr2 = arr2[:-n]
+    else:
+        n_arr1 = arr1
+        n_arr2 = arr2
+
+    print('Length of n_arr1: {}'.format(len(np.array(n_arr1))))
+    print('Length of n_arr2: {}'.format(len(np.array(n_arr2))))
 
     fig = plt.figure(figsize=(9, 6),dpi=100)
     gs = gridspec.GridSpec(7, 1, hspace=0.0, wspace=0.0)
@@ -62,16 +87,6 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     ax2.yaxis.set_major_locator(tick.LinearLocator(numticks=5))
     ax2.xaxis.set_major_locator(tick.MaxNLocator(symmetric=True, prune=None, min_n_ticks=6, nbins=6))
     ax2.autoscale(axis="x", tight=True)
-
-    if len(np.array(arr1)) > len(np.array(arr2)):
-        n_arr1 = arr1[:-1]
-        n_arr2 = arr2
-    elif len(np.array(arr2)) > len(np.array(arr1)):
-        n_arr1 = arr1
-        n_arr2 = arr2[:-1]
-    else:
-        n_arr1 = arr1
-        n_arr2 = arr2
 
     ax1.bar(range(0,len(np.array(n_arr1))),
             np.array(n_arr1),
@@ -96,10 +111,6 @@ def make1DplotCompare(arr1,arr1Label,arr2,arr2Label,hname,ylabel,isLog):
     ax1.legend()
     
     ratio = getRatio(np.array(n_arr1),np.array(n_arr2))
-    # print('Size arr1: {}'.format(len(np.array(n_arr1))))
-    # print('Size arr2: {}'.format(len(np.array(n_arr2))))
-    # print('Size ratio: {}'.format(len(ratio)))
-    # print('Ratio array: {}'.format(ratio))
     bin_centers = range(0,len(np.array(n_arr2)))
 
     ax2.plot(bin_centers, ratio, color='black', marker='.')
@@ -263,12 +274,23 @@ def makeHTML(outFileName,title):
         outFile.write("<h2> Cases per 100k </h2>")
         outFile.write('<table style="width:100%">')
         outFile.write("<tr>\n")
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k.pdf\"><img src=\"all_cases_per_100k.pdf\" alt=\"all_cases_per_100k.pdf\" width=\"100%\"></a></td>\n")         
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_cases_per_100k_log.pdf\"><img src=\"all_cases_per_100k_log.pdf\" alt=\"all_cases_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_cases_smoothed_per_100k.pdf\"><img src=\"all_new_cases_smoothed_per_100k.pdf\" alt=\"all_new_cases_smoothed_per_100k.pdf\" width=\"100%\"></a></td>\n")         
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_cases_smoothed_per_100k_log.pdf\"><img src=\"all_new_cases_smoothed_per_100k_log.pdf\" alt=\"all_new_cases_smoothed_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2weeks_cases_per_100k.pdf\" alt=\"2weeks_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
         outFile.write("</tr>\n")
         outFile.write("</table>\n")
-        clist = ['usa','can','swiss','france','spain','bgr','pol','por']
+
+        outFile.write("<h2> Vaccinations </h2>")
+        outFile.write('<table style="width:100%">')
+        outFile.write("<tr>\n")
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_per_100k.pdf\"><img src=\"all_new_vaccinations_smoothed_per_100k.pdf\" alt=\"all_new_vaccinations_smoothed_per_100k.pdf\" width=\"100%\"></a></td>\n")         
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_per_100k_log.pdf\"><img src=\"all_new_vaccinations_smoothed_per_100k_log.pdf\" alt=\"all_new_vaccinations_smoothed_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_vax_per_pop.pdf\"><img src=\"all_vax_per_pop.pdf\" alt=\"all_vax_per_pop.pdf\" width=\"100%\"></a></td>\n")         
+#        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_log.pdf\"><img src=\"all_new_vaccinations_smoothed_log.pdf\" alt=\"all_new_vaccinations_smoothed_log.pdf\" width=\"100%\"></a></td>\n")
+        outFile.write("</tr>\n")
+        outFile.write("</table>\n")
+        
+        clist = ['usa','can','swiss','france','spain','bgr','pol','por','uk']
         cdict = {
             'usa' : 'United States',
             'can' : 'Canada',
@@ -277,7 +299,8 @@ def makeHTML(outFileName,title):
             'spain' : 'Spain',
             'bgr' : 'Bulgaria',
             'pol' : 'Poland',
-            'por' : 'Portugal'
+            'por' : 'Portugal',
+            'uk': 'United Kingdom'
         }
         fdict = {
             'usa' : 'us',
@@ -287,7 +310,8 @@ def makeHTML(outFileName,title):
             'spain' : 'es',
             'bgr' : 'bg',
             'pol' : 'pl',
-            'por' : 'pt'
+            'por' : 'pt',
+            'uk'  : 'gb'
         }
         for c in clist:
             plots = glob.glob(c+'*.pdf')

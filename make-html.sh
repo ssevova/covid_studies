@@ -2,13 +2,13 @@
 OUTDIR=covid-cases
 
 # cd to this dir
-cd /afs/cern.ch/work/s/ssevova/public/covid_studies/
+cd /Users/ssevova/Documents/covid/
 # Remove the old data file
 rm owid-covid-data.csv
 # Grab the new data file
-wget https://covid.ourworldindata.org/data/owid-covid-data.csv
+/usr/local/bin/wget https://covid.ourworldindata.org/data/owid-covid-data.csv
 # Make the plots and html
-python plotCovidCases.py -o ${OUTDIR}
-# Copy to EOS space 
-cp -r ${OUTDIR} /eos/user/s/ssevova/www/
+python plotCovidCases.py -i /Users/ssevova/Documents/covid/owid-covid-data.csv -o ${OUTDIR} > /Users/ssevova/Documents/covid_cron.log
+# Copy to AWS S3 bucket
+/usr/local/bin/aws s3 cp ${OUTDIR} s3://www.covid19studies.website/ --recursive
 
