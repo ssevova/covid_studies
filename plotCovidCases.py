@@ -12,8 +12,6 @@ import os
 import re
 import glob
 import shutil
-#import uproot as up
-#import uproot_methods
 import pandas as pd
 import numpy as np
 from scipy.integrate import odeint
@@ -22,6 +20,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 import math
 import glob
 from plotUtils import *
+plt.set_cmap("Set3")
 ###############################################################################
 # Command line arguments
 ######################## 
@@ -38,6 +37,11 @@ def getArgumentParser():
                         dest='outdir',
                         help='Output directory for plots, selection lists, etc',
                         default='outdir')
+    parser.add_argument('-v',
+                        '--verbose',
+                        dest='verbose',
+                        help='Increase output verbosity',
+                        action="store_true")
     return parser
 ###############################################################################
 def getCases100k(name,df):
@@ -63,6 +67,21 @@ def deriv(y, t, N, beta, gamma):
     dIdt = beta * S * I / N - gamma * I
     dRdt = gamma * I
     return dSdt, dIdt, dRdt
+    
+def alignDF(inputDF,targetDF):
+    inputDF = pd.merge(targetDF, inputDF, how='outer', on='date').fillna(0)
+    inputDF = inputDF.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
+                                    "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
+                                    "total_vaccinations_y":"total_vaccinations",
+                                    "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
+                                    "new_deaths_smoothed_y": "new_deaths_smoothed",
+                                    "new_deaths_smoothed_per_million_y":"new_deaths_smoothed_per_million",
+                                    "population_y":"population",
+                                    "location_y":"location",
+                                    "people_fully_vaccinated_y":"people_fully_vaccinated",
+                                    "people_vaccinated_y":"people_vaccinated"})
+    inputDF = inputDF.fillna(0)
+    return inputDF
 ###############################################################################
 def main():
     """ Run script """
@@ -82,15 +101,23 @@ def main():
     print(df_all.columns)
 
     df_swiss  = df_all[df_all['location']=='Switzerland']
+    if options.verbose:
+        print('Earliest date from df_swiss: {}'.format(df_swiss['date'].iloc[0]))
+        print('Latest date from df_swiss: {}'.format(df_swiss['date'].iloc[-1]))
     df_por    = df_all[df_all['location']=='Portugal']
     df_bgr    = df_all[df_all['location']=='Bulgaria']
     df_usa    = df_all[df_all['location']=='United States']
+    if options.verbose:
+        print('Earliest date from df_usa: {}'.format(df_usa['date'].iloc[0]))
+        print('Latest date from df_usa: {}'.format(df_usa['date'].iloc[-1]))
     df_can    = df_all[df_all['location']=='Canada']
     df_pol    = df_all[df_all['location']=='Poland']
-    df_france = df_all[df_all['location']=='France']
+    df_fr = df_all[df_all['location']=='France']
     df_uk     = df_all[df_all['location']=='United Kingdom']
-    df_spain  = df_all[df_all['location']=='Spain']
+    df_esp  = df_all[df_all['location']=='Spain']
     df_gr     = df_all[df_all['location']=='Greece']
+    df_it     = df_all[df_all['location']=='Italy']
+    df_ru     = df_all[df_all['location']=='Russia']
     
     df_cen_europe = df_all[(df_all['location']=='Spain') |
                            (df_all['location']=='Italy') |
@@ -117,83 +144,38 @@ def main():
     df_eu['new_cases_smoothed_per_million'] = df_eu['new_cases_smoothed'].dropna().truediv((totpop/1000000))
     df_eu['new_deaths_per_million'] = df_eu['new_deaths'].truediv((totpop/1000000))
     df_eu['new_deaths_smoothed_per_million'] = df_eu['new_deaths_smoothed'].dropna().truediv((totpop/1000000))
-
-    ### Align DFs of countries w/ less stats to Swiss DF
-    df_bgr = pd.merge(df_swiss, df_bgr, how='outer', on='date').fillna(0)
-    df_pol = pd.merge(df_swiss, df_pol, how='outer', on='date').fillna(0)
-    df_por = pd.merge(df_swiss, df_por, how='outer', on='date').fillna(0)
-    df_gr = pd.merge(df_swiss, df_gr, how='outer', on='date').fillna(0)
-
-    df_bgr = df_bgr.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
-                                    "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
-                                    "total_vaccinations_y":"total_vaccinations",
-                                    "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
-                                    "new_deaths_smoothed_y": "new_deaths_smoothed",
-                                    "new_deaths_smoothed_per_million_y":"new_deaths_smoothed_per_million",
-                                    "population_y":"population",
-                                    "location_y":"location",
-                                    "people_fully_vaccinated_y":"people_fully_vaccinated",
-                                    "people_vaccinated_y":"people_vaccinated"})
-    df_pol = df_pol.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
-                                    "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
-                                    "total_vaccinations_y":"total_vaccinations",
-                                    "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
-                                    "new_deaths_smoothed_y": "new_deaths_smoothed",
-                                    "new_deaths_smoothed_per_million_y":"new_deaths_smoothed_per_million",
-                                    "population_y":"population",
-                                    "location_y":"location",
-                                    "people_fully_vaccinated_y":"people_fully_vaccinated",
-                                    "people_vaccinated_y":"people_vaccinated"})
-    df_por = df_por.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
-                                    "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
-                                    "total_vaccinations_y":"total_vaccinations",
-                                    "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
-                                    "new_deaths_smoothed_y": "new_deaths_smoothed",
-                                    "new_deaths_smoothed_per_million_y":"new_deaths_smoothed_per_million",
-                                    "population_y":"population",
-                                    "location_y":"location",
-                                    "people_fully_vaccinated_y":"people_fully_vaccinated",
-                                    "people_vaccinated_y":"people_vaccinated"})
-    df_gr = df_gr.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
-                                    "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
-                                    "total_vaccinations_y":"total_vaccinations",
-                                    "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
-                                    "new_deaths_smoothed_y": "new_deaths_smoothed",
-                                    "new_deaths_smoothed_per_million_y":"new_deaths_smoothed_per_million",
-                                    "population_y":"population",
-                                    "location_y":"location",
-                                    "people_fully_vaccinated_y":"people_fully_vaccinated",
-                                    "people_vaccinated_y":"people_vaccinated"})
-    ### Fill NaN with 0
-    df_swiss  = df_swiss.fillna(0)
-    df_eu     = df_eu.fillna(0)
-    df_usa    = df_usa.fillna(0)
-    df_can    = df_can.fillna(0)
-    df_spain  = df_spain.fillna(0)
-    df_france = df_france.fillna(0)
-    df_uk     = df_uk.fillna(0)
-    df_pol    = df_pol.fillna(0)
-    df_bgr    = df_bgr.fillna(0)
-    df_por    = df_por.fillna(0)
-    df_gr     = df_gr.fillna(0)
-
-    labelDay="Cases / day"
+  
+    ### Align DFs of countries w/ less stats to USA DF
+    df_usa = df_usa.fillna(0)
+    df_swiss = alignDF(df_swiss,df_usa)
+    df_can = alignDF(df_can,df_usa)
+    df_bgr = alignDF(df_bgr,df_usa)
+    df_pol = alignDF(df_pol,df_usa)
+    df_por = alignDF(df_por,df_usa)
+    df_esp = alignDF(df_esp,df_usa)
+    df_fr  = alignDF(df_fr,df_usa)
+    df_uk  = alignDF(df_uk,df_usa)
+    df_gr  = alignDF(df_gr,df_usa)
+    df_it  = alignDF(df_it,df_usa)
+    df_ru  = alignDF(df_ru,df_usa)
+   
+    labelDay = "Cases / day"
     vaxFullDay = "Fraction pop. fully vaccinated / day"
     vaxOneDay = "Fraction pop. w/ min. first vaccine / day"
-    labelMil="Cases per million / day"
+    labelMil = "Cases per million / day"
     cases100k = "Cases per 100k / day"
     vax100k = "Vaccinations per 100k / day"
     isLog=False
     
-    ### Set min cases to 0 (not negative)
-    dfs = [df_swiss, df_usa, df_can, df_bgr, df_pol, df_por, df_spain, df_france, df_uk, df_gr, df_eu]
-    names = ['CHE', 'USA', 'CAN', 'BGR', 'POL', 'PRT', 'ESP', 'FRA', 'GBR', 'GRC','EU']
+    dfs = [df_swiss, df_usa, df_can, df_bgr, df_pol, df_por, df_esp, df_fr, df_uk, df_gr, df_it, df_ru, df_eu]
+    names = ['CHE', 'USA', 'CAN', 'BGR', 'POL', 'PRT', 'ESP', 'FRA', 'GBR', 'GRC', 'ITA','RUS', 'EU']
     int_dfs = []
     
+    ### Set min cases to 0 (not negative)
     for name,df in zip(names,dfs):
-        df.loc[df['new_cases_smoothed']<1, 'new_cases_smoothed']=0.0
-        df.loc[df['new_cases_smoothed_per_million']<1, 'new_cases_smoothed_per_million']=0.0
-        df.loc[df['new_vaccinations_smoothed']<1, 'new_vaccinations_smoothed']=0.0
+        df.loc[df['new_cases_smoothed']<0.0, 'new_cases_smoothed']=0.0
+        df.loc[df['new_cases_smoothed_per_million']<0.0, 'new_cases_smoothed_per_million']=0.0
+        df.loc[df['new_vaccinations_smoothed']<0.0, 'new_vaccinations_smoothed']=0.0
 
         if name != 'EU':
             getCases100k(name,df)
@@ -209,6 +191,7 @@ def main():
     #makeOverlayPlot(dfs, names, 'vax', vaxDay, 'Days', True) 
     makeOverlayPlot(int_dfs, names, 'cases', 'Total cases per 100k / 2 weeks', '2 week period', isLog)
 
+    '''
     ######################## Experimental stuff ##########################
     ## SIR fits
     N_US = df_usa.population.iloc[0]
@@ -233,7 +216,7 @@ def main():
     retSwiss = odeint(deriv, y0_Swiss, t_Swiss, args=(N_Swiss, beta, gamma))
     S_Swiss, I_Swiss, R_Swiss = retSwiss.T
     #####################################################################
-
+    '''
     ### Make cases plots 
     make1Dplot(df_can['new_cases_smoothed']   ,"canada_daily_infections",0,len(df_can.index),labelDay,isLog)
     make1Dplot(df_swiss['new_cases_smoothed'] ,"swiss_daily_infections",0,len(df_swiss.index),labelDay,isLog)
@@ -242,24 +225,28 @@ def main():
     make1Dplot(df_bgr['new_cases_smoothed'] ,"bgr_daily_infections",0,len(df_bgr.index),labelDay,isLog)
     make1Dplot(df_usa['new_cases_smoothed']   ,"usa_daily_infections",0,len(df_usa.index),labelDay,isLog)
     #make1DplotSIR(df_usa['total_cases'],t_US,I_US,"usa_total_cases_SIR_fit",0,len(df_usa.index),"Total cases",isLog)
-    make1Dplot(df_france['new_cases_smoothed'],"france_daily_infections",0,len(df_france.index),labelDay,isLog)
-    make1Dplot(df_spain['new_cases_smoothed'] ,"spain_daily_infections",0,len(df_spain.index),labelDay,isLog)
+    make1Dplot(df_fr['new_cases_smoothed'],"france_daily_infections",0,len(df_fr.index),labelDay,isLog)
+    make1Dplot(df_esp['new_cases_smoothed'] ,"spain_daily_infections",0,len(df_esp.index),labelDay,isLog)
     make1Dplot(df_por['new_cases_smoothed'] ,"portugal_daily_infections",0,len(df_por.index),labelDay,isLog)
     make1Dplot(df_pol['new_cases_smoothed'] ,"poland_daily_infections",0,len(df_pol.index),labelDay,isLog)
     make1Dplot(df_uk['new_cases_smoothed'] ,"uk_daily_infections",0,len(df_uk.index),labelDay,isLog)
     make1Dplot(df_gr['new_cases_smoothed'] ,"gr_daily_infections",0,len(df_gr.index),labelDay,isLog)
+    make1Dplot(df_it['new_cases_smoothed'] ,"it_daily_infections",0,len(df_it.index),labelDay,isLog)
+    make1Dplot(df_ru['new_cases_smoothed'] ,"ru_daily_infections",0,len(df_ru.index),labelDay,isLog)
     
     ### Make cases per mill plots
     make1Dplot(df_can['new_cases_smoothed_per_million'],"canada_daily_cases_per_mil",0,len(df_can.index),labelMil,isLog)
     make1Dplot(df_swiss['new_cases_smoothed_per_million'],"swiss_daily_cases_per_mil",0,len(df_swiss.index),labelMil,isLog)
     make1Dplot(df_bgr['new_cases_smoothed_per_million'],"bgr_daily_cases_per_mil",0,len(df_bgr.index),labelMil,isLog)
     make1Dplot(df_usa['new_cases_smoothed_per_million'],"usa_daily_cases_per_mil",0,len(df_usa.index),labelMil,isLog)
-    make1Dplot(df_france['new_cases_smoothed_per_million'],"france_daily_cases_per_mil",0,len(df_france.index),labelMil,isLog)
-    make1Dplot(df_spain['new_cases_smoothed_per_million'],"spain_daily_cases_per_mil",0,len(df_spain.index),labelMil,isLog)
+    make1Dplot(df_fr['new_cases_smoothed_per_million'],"france_daily_cases_per_mil",0,len(df_fr.index),labelMil,isLog)
+    make1Dplot(df_esp['new_cases_smoothed_per_million'],"spain_daily_cases_per_mil",0,len(df_esp.index),labelMil,isLog)
     make1Dplot(df_por['new_cases_smoothed_per_million'],"portugal_daily_cases_per_mil",0,len(df_por.index),labelMil,isLog)
     make1Dplot(df_pol['new_cases_smoothed_per_million'],"poland_daily_cases_per_mil",0,len(df_pol.index),labelMil,isLog)
     make1Dplot(df_uk['new_cases_smoothed_per_million'],"uk_daily_cases_per_mil",0,len(df_uk.index),labelMil,isLog)
     make1Dplot(df_gr['new_cases_smoothed_per_million'],"gr_daily_cases_per_mil",0,len(df_gr.index),labelMil,isLog)
+    make1Dplot(df_it['new_cases_smoothed_per_million'],"it_daily_cases_per_mil",0,len(df_it.index),labelMil,isLog)
+    make1Dplot(df_ru['new_cases_smoothed_per_million'],"ru_daily_cases_per_mil",0,len(df_ru.index),labelMil,isLog)
 
     make1DplotCompare(df_can['new_cases_smoothed_per_million'],"Canada",df_usa['new_cases_smoothed_per_million'],"USA","can_v_usa_per_mil",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_usa['new_cases_smoothed_per_million'],"USA","swiss_v_usa_per_mil",labelMil,isLog)
@@ -268,8 +255,8 @@ def main():
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_pol['new_cases_smoothed_per_million'],"Poland","swiss_v_pol_per_mill",labelMil,isLog)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"Switzerland",df_por['new_cases_smoothed_per_million'],"Portugal","swiss_v_por_per_mill",labelMil,isLog)
     make1DplotCompare(df_can['new_cases_smoothed_per_million'],"Canada",df_bgr['new_cases_smoothed_per_million'],"Bulgaria","can_v_bgr_per_mill",labelMil,isLog)
-    make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_spain['new_cases_smoothed_per_million'],"Spain","usa_v_spain_per_mill",labelMil,isLog)
-    make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_france['new_cases_smoothed_per_million'],"France","usa_v_france_per_mill",labelMil,isLog)
+    make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_esp['new_cases_smoothed_per_million'],"Spain","usa_v_spain_per_mill",labelMil,isLog)
+    make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA",df_fr['new_cases_smoothed_per_million'],"France","usa_v_france_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_per_million'],"USA (pop=331,002,647)",df_eu['new_cases_per_million'],"ES+IT+FR+CH+DE+BE+AU+UK (pop=353,410,706)","usa_v_eu_per_mill",labelMil,isLog)
     make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA (pop=331,002,647)",df_eu['new_cases_smoothed_per_million'],"ES+IT+FR+CH+DE+BE+AU+UK (pop=353,410,706)","usa_v_eu_smoothed_per_mill","Cases per million / day (smoothed)",isLog)
 
@@ -279,13 +266,15 @@ def main():
     make1DplotCompare(df_usa['new_cases_smoothed_per_million'],"USA cases",df_usa['new_deaths_smoothed_per_million'],"USA deaths","usa_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_can['new_cases_smoothed_per_million'],"CAN cases",df_can['new_deaths_smoothed_per_million'],"CAN deaths","can_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_swiss['new_cases_smoothed_per_million'],"SWISS cases",df_swiss['new_deaths_smoothed_per_million'],"SWISS deaths","swiss_cases_v_deaths_per_mill",labelMil,True)
-    make1DplotCompare(df_france['new_cases_smoothed_per_million'],"FRANCE cases",df_france['new_deaths_smoothed_per_million'],"FRANCE deaths","france_cases_v_deaths_per_mill",labelMil,True)
-    make1DplotCompare(df_spain['new_cases_smoothed_per_million'],"SPAIN cases",df_spain['new_deaths_smoothed_per_million'],"SPAIN deaths","spain_cases_v_deaths_per_mill",labelMil,True)    
+    make1DplotCompare(df_fr['new_cases_smoothed_per_million'],"FRANCE cases",df_fr['new_deaths_smoothed_per_million'],"FRANCE deaths","france_cases_v_deaths_per_mill",labelMil,True)
+    make1DplotCompare(df_esp['new_cases_smoothed_per_million'],"SPAIN cases",df_esp['new_deaths_smoothed_per_million'],"SPAIN deaths","spain_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_bgr['new_cases_smoothed_per_million'],"BGR cases",df_bgr['new_deaths_smoothed_per_million'],"BGR deaths","bgr_cases_v_deaths_per_mill",labelMil,True)    
     make1DplotCompare(df_pol['new_cases_smoothed_per_million'],"POL cases",df_pol['new_deaths_smoothed_per_million'],"POL deaths","pol_cases_v_deaths_per_mill",labelMil,True)    
     make1DplotCompare(df_por['new_cases_smoothed_per_million'],"POR cases",df_por['new_deaths_smoothed_per_million'],"POR deaths","por_cases_v_deaths_per_mill",labelMil,True)
     make1DplotCompare(df_uk['new_cases_smoothed_per_million'],"UK cases",df_uk['new_deaths_smoothed_per_million'],"UK deaths","uk_cases_v_deaths_per_mill",labelMil,True)
-    make1DplotCompare(df_gr['new_cases_smoothed_per_million'],"GR cases",df_gr['new_deaths_smoothed_per_million'],"GR deaths","gr_cases_v_deaths_per_mill",labelMil,True)    
+    make1DplotCompare(df_gr['new_cases_smoothed_per_million'],"GR cases",df_gr['new_deaths_smoothed_per_million'],"GR deaths","gr_cases_v_deaths_per_mill",labelMil,True)
+    make1DplotCompare(df_it['new_cases_smoothed_per_million'],"IT cases",df_it['new_deaths_smoothed_per_million'],"IT deaths","it_cases_v_deaths_per_mill",labelMil,True)
+    make1DplotCompare(df_ru['new_cases_smoothed_per_million'],"RU cases",df_ru['new_deaths_smoothed_per_million'],"RU deaths","ru_cases_v_deaths_per_mill",labelMil,True)
 
     make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_usa['new_cases_smoothed'],"USA cases","usa_tests_v_cases","Tests / day",isLog)
     make1DplotCompare(df_usa['new_tests_smoothed'],"USA tests",df_eu['new_tests_smoothed'],"ES+IT+FR+CH+DE+BE+AU+UK tests","usa_v_eu_tests","Tests / day",isLog)
