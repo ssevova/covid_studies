@@ -60,6 +60,11 @@ def getTwoWeekTotCases(name,df):
 def getVaxPerPop(name,df):
     df['vax_per_pop'] = df.people_fully_vaccinated/df.population
     df['min_vax_per_pop'] = df.people_vaccinated/df.population
+    
+def getPercentPositive(df):
+    df['positive_rate'] = df.new_cases/df.new_tests
+    df['positive_rate'] = df['positive_rate'].rolling(7).mean()
+    df['hosp_patients_per_case'] = df.hosp_patients/df.new_cases
 
 def deriv(y, t, N, beta, gamma):
     S, I, R = y
@@ -70,7 +75,12 @@ def deriv(y, t, N, beta, gamma):
     
 def alignDF(inputDF,targetDF):
     inputDF = pd.merge(targetDF, inputDF, how='outer', on='date').fillna(0)
+
     inputDF = inputDF.rename(columns={"new_cases_smoothed_y": "new_cases_smoothed",
+                                      "positive_rate_y":"positive_rate",
+                                      "tests_per_case_y":"tests_per_case",
+                                      "total_boosters_y":"total_boosters",
+                                      "total_boosters_per_hundred_y":"total_boosters_per_hundred",
                                     "new_cases_smoothed_per_million_y": "new_cases_smoothed_per_million",
                                     "total_vaccinations_y":"total_vaccinations",
                                     "new_vaccinations_smoothed_y":"new_vaccinations_smoothed",
@@ -81,6 +91,7 @@ def alignDF(inputDF,targetDF):
                                     "people_fully_vaccinated_y":"people_fully_vaccinated",
                                     "people_vaccinated_y":"people_vaccinated"})
     inputDF = inputDF.fillna(0)
+
     return inputDF
 ###############################################################################
 def main():
@@ -99,8 +110,10 @@ def main():
 
     df_all = pd.read_csv(options.infile)
     print(df_all.columns)
-
+    getPercentPositive(df_all)
+    df_all = df_all.fillna(0)
     df_swiss  = df_all[df_all['location']=='Switzerland']
+
     if options.verbose:
         print('Earliest date from df_swiss: {}'.format(df_swiss['date'].iloc[0]))
         print('Latest date from df_swiss: {}'.format(df_swiss['date'].iloc[-1]))
@@ -118,7 +131,7 @@ def main():
     df_gr     = df_all[df_all['location']=='Greece']
     df_it     = df_all[df_all['location']=='Italy']
     df_ru     = df_all[df_all['location']=='Russia']
-    
+
     df_cen_europe = df_all[(df_all['location']=='Spain') |
                            (df_all['location']=='Italy') |
                            (df_all['location']=='France') |
@@ -158,21 +171,28 @@ def main():
     df_gr  = alignDF(df_gr,df_usa)
     df_it  = alignDF(df_it,df_usa)
     df_ru  = alignDF(df_ru,df_usa)
-   
+
     labelDay = "Cases / day"
     vaxFullDay = "Fraction pop. fully vaccinated / day"
     vaxOneDay = "Fraction pop. w/ min. first vaccine / day"
     labelMil = "Cases per million / day"
     cases100k = "Cases per 100k / day"
+    testPos = "Avg Weekly Test Positivity"
     vax100k = "Vaccinations per 100k / day"
     isLog=False
-    
+     
     dfs = [df_swiss, df_usa, df_can, df_bgr, df_pol, df_por, df_esp, df_fr, df_uk, df_gr, df_it, df_ru, df_eu]
     names = ['CHE', 'USA', 'CAN', 'BGR', 'POL', 'PRT', 'ESP', 'FRA', 'GBR', 'GRC', 'ITA','RUS', 'EU']
     int_dfs = []
     
     ### Set min cases to 0 (not negative)
     for name,df in zip(names,dfs):
+        if name=='EU':
+            df.loc[:,'positive_rate']=0.0
+            df.loc[:,'total_boosters_per_hundred']=0.0
+        if name=='EU':
+            df.loc[:,'tests_per_case']=0.0        
+        #df.loc[df['positive_rate']<0.0, 'positive_rate']=0.0
         df.loc[df['new_cases_smoothed']<0.0, 'new_cases_smoothed']=0.0
         df.loc[df['new_cases_smoothed_per_million']<0.0, 'new_cases_smoothed_per_million']=0.0
         df.loc[df['new_vaccinations_smoothed']<0.0, 'new_vaccinations_smoothed']=0.0
@@ -182,6 +202,9 @@ def main():
             getVaxPerPop(name,df)
             int_dfs.append(getTwoWeekTotCases(name,df))
             
+    makeOverlayPlot(dfs, names, 'positive_rate', testPos, 'Days', isLog) 
+    makeOverlayPlot(dfs, names, 'total_boosters_per_hundred', 'Booster / 100k', 'Days', isLog)
+    makeOverlayPlot(dfs, names, 'tests_per_case', 'Test / Case', 'Days', isLog) 
     makeOverlayPlot(dfs, names, 'cases', cases100k, 'Days', isLog)
     makeOverlayPlot(dfs, names, 'cases', cases100k, 'Days', True)
     makeOverlayPlot(dfs, names, 'vax100k', vax100k, 'Days', isLog)

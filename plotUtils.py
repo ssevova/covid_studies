@@ -25,6 +25,8 @@ def makeOverlayPlot(df_array,names,col,ylabel,xlabel,isLog):
         colName = 'vax_per_pop'
     elif col == 'vaxOne':
         colName = 'min_vax_per_pop'
+    else:
+        colName = col
         
     fig, ax1 = plt.subplots(1,1)  
 
@@ -49,7 +51,8 @@ def makeOverlayPlot(df_array,names,col,ylabel,xlabel,isLog):
         ax1.set_yscale('log')
     else:
         ax1.set_ylim(bottom=0.0001)
-
+    #if colName=='positive_rate':
+    #    ax1.set_ylim(bottom=0.0001,top=80.0)
     ax1.set_xlim(start,days+10)        
     ax1.tick_params(direction='in', left=True, right=True)
     ax1.set_xlabel(xlabel)
@@ -287,16 +290,19 @@ def makeHTML(outFileName,title):
         outFile.write('<table style="width:100%">')
         outFile.write("<tr>\n")
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_cases_smoothed_per_100k.pdf\"><img src=\"all_new_cases_smoothed_per_100k.pdf\" alt=\"all_new_cases_smoothed_per_100k.pdf\" width=\"100%\"></a></td>\n")         
-        #outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_cases_smoothed_per_100k_log.pdf\"><img src=\"all_new_cases_smoothed_per_100k_log.pdf\" alt=\"all_new_cases_smoothed_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2weeks_cases_per_100k.pdf\" alt=\"2weeks_cases_per_100k.pdf\" width=\"100%\"></a></td>\n") 
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"2weeks_cases_per_100k.pdf\"><img src=\"2weeks_cases_per_100k.pdf\" alt=\"2weeks_cases_per_100k.pdf\" width=\"100%\"></a></td>\n")
+        for iplot in ['all_positive_rate','all_tests_per_case']:
+            outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\""+iplot+".pdf\"><img src=\""+iplot+".pdf\" alt=\""+iplot+".pdf\" width=\"100%\"></a></td>\n")
         outFile.write("</tr>\n")
         outFile.write("</table>\n")
 
         outFile.write("<h2> Vaccinations </h2>")
         outFile.write('<table style="width:100%">')
         outFile.write("<tr>\n")
-        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_per_100k.pdf\"><img src=\"all_new_vaccinations_smoothed_per_100k.pdf\" alt=\"all_new_vaccinations_smoothed_per_100k.pdf\" width=\"100%\"></a></td>\n")         
+        outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_per_100k.pdf\"><img src=\"all_new_vaccinations_smoothed_per_100k.pdf\" alt=\"all_new_vaccinations_smoothed_per_100k.pdf\" width=\"100%\"></a></td>\n")
         outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\"all_new_vaccinations_smoothed_per_100k_log.pdf\"><img src=\"all_new_vaccinations_smoothed_per_100k_log.pdf\" alt=\"all_new_vaccinations_smoothed_per_100k_log.pdf\" width=\"100%\"></a></td>\n")
+        for iplot in ['all_total_boosters_per_hundred']:
+            outFile.write("<td width=\"25%\"><a target=\"_blank\" href=\""+iplot+".pdf\"><img src=\""+iplot+".pdf\" alt=\""+iplot+".pdf\" width=\"100%\"></a></td>\n")
         outFile.write("</tr>\n")
         
         outFile.write("<tr>\n")
