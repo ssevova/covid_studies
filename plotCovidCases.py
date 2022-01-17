@@ -62,8 +62,8 @@ def getVaxPerPop(name,df):
     df['min_vax_per_pop'] = df.people_vaccinated/df.population
     
 def getPercentPositive(df):
-    df['positive_rate'] = df.new_cases/df.new_tests
-    df['positive_rate'] = df['positive_rate'].rolling(7).mean()
+    #df['positive_rate'] = df.new_cases/df.new_tests
+    #df['positive_rate'] = df['positive_rate'].rolling(7).mean()
     df['hosp_patients_per_case'] = df.hosp_patients/df.new_cases
 
 def deriv(y, t, N, beta, gamma):
@@ -177,7 +177,7 @@ def main():
     vaxOneDay = "Fraction pop. w/ min. first vaccine / day"
     labelMil = "Cases per million / day"
     cases100k = "Cases per 100k / day"
-    testPos = "Avg Weekly Test Positivity"
+    testPos = "Test Positivity"
     vax100k = "Vaccinations per 100k / day"
     isLog=False
      
